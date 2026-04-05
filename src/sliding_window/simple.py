@@ -35,10 +35,10 @@ class MonotonicMinQueue:
     def peek_front(self) -> ValueIndex | None:
         return self._dq[0] if self._dq else None
 
-    def push(self, element: ValueIndex) -> None:
-        while self._dq and self._dq[-1].value >= element.value:
+    def push(self, value: int | float, index: int) -> None:
+        while self._dq and self._dq[-1].value >= value:
             self._dq.pop()
-        self._dq.append(element)
+        self._dq.append(ValueIndex(value=value, index=index))
 
     def pop(self) -> ValueIndex | None:
         return self._dq.popleft() if self._dq else None
@@ -62,10 +62,10 @@ class MonotonicMaxQueue:
     def peek_front(self) -> ValueIndex | None:
         return self._dq[0] if self._dq else None
 
-    def push(self, element: ValueIndex) -> None:
-        while self._dq and self._dq[-1].value <= element.value:
+    def push(self, value: int | float, index: int) -> None:
+        while self._dq and self._dq[-1].value <= value:
             self._dq.pop()
-        self._dq.append(element)
+        self._dq.append(ValueIndex(value=value, index=index))
 
     def pop(self) -> ValueIndex | None:
         return self._dq.popleft() if self._dq else None
@@ -112,7 +112,7 @@ class _SlidingWindowBase:
         self.next_index += 1
 
         self._evict_expired()
-        self._queue.push(ValueIndex(value=value, index=current_index))
+        self._queue.push(value, current_index)
 
     def extend(self, values: Iterable[int | float]) -> list[int | float]:
         return list(self.iter_values(values))

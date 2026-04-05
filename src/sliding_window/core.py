@@ -42,10 +42,10 @@ class _MonotonicQueue(Generic[T], ABC):
     def peek_front(self) -> Optional[ValueIndex[T]]:
         return self._dq[0] if self._dq else None
 
-    def push(self, element: ValueIndex[T]) -> None:
-        while self._dq and self._should_discard(self._dq[-1].value, element.value):
+    def push(self, value: T, index: int) -> None:
+        while self._dq and self._should_discard(self._dq[-1].value, value):
             self._dq.pop()
-        self._dq.append(element)
+        self._dq.append(ValueIndex(value=value, index=index))
 
     def pop(self) -> Optional[ValueIndex[T]]:
         return self._dq.popleft() if self._dq else None
@@ -112,7 +112,7 @@ class _SlidingWindowBase(Generic[T], ABC):
         self.next_index += 1
 
         self._evict_expired()
-        self._queue.push(ValueIndex(value=value, index=current_index))
+        self._queue.push(value, current_index)
 
     def extend(self, values: Iterable[T]) -> list[T]:
         return list(self.iter_values(values))
