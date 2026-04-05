@@ -28,7 +28,7 @@ class ValueIndex(Generic[T]):
 
 
 class _MonotonicQueue(Generic[T], ABC):
-    """Internal queue that preserves the best candidate at the front."""
+    """Internal queue that keeps the best candidate at the head."""
 
     def __init__(self) -> None:
         self._dq: Deque[ValueIndex[T]] = deque()
@@ -44,7 +44,7 @@ class _MonotonicQueue(Generic[T], ABC):
             self._dq.pop()
         self._dq.append(element)
 
-    def pop_front(self) -> Optional[ValueIndex[T]]:
+    def pop(self) -> Optional[ValueIndex[T]]:
         return self._dq.popleft() if self._dq else None
 
     def peek_front(self) -> Optional[ValueIndex[T]]:
@@ -82,11 +82,11 @@ class _SlidingWindowBase(Generic[T], ABC):
             raise ValueError("window_size must be greater than 0")
 
         self.window_size = window_size
-        self.current_index = 0
+        self.next_index = 0
         self._queue = self.queue_type()
 
     def __len__(self) -> int:
-        return min(self.current_index, self.window_size)
+        return min(self.next_index, self.window_size)
 
     def __bool__(self) -> bool:
         return bool(self._queue)
@@ -100,9 +100,11 @@ class _SlidingWindowBase(Generic[T], ABC):
         )
 
     def push(self, value: T) -> None:
+        current_index = self.next_index
+        self.next_index += 1
+
         self._evict_expired()
-        self._queue.push(ValueIndex(value=value, index=self.current_index))
-        self.current_index += 1
+        self._queue.push(ValueIndex(value=value, index=current_index))
 
     def extend(self, values: Iterable[T]) -> list[T]:
         results: list[T] = []
@@ -113,22 +115,21 @@ class _SlidingWindowBase(Generic[T], ABC):
         return results
 
     def clear(self) -> None:
-        self.current_index = 0
+        self.next_index = 0
         self._queue.clear()
 
     def is_full(self) -> bool:
-        return self.current_index >= self.window_size
+        return self.next_index >= self.window_size
 
     def current(self) -> T:
-        front = self._queue.peek_front()
-        if front is None:
+        if not self._queue:
             raise IndexError("window is empty")
-        return front.value
+        return self._queue.peek_front().value
 
     def _evict_expired(self) -> None:
-        front = self._queue.peek_front()
-        if front is not None and front.index <= self.current_index - self.window_size:
-            self._queue.pop_front()
+        window_pop_left_index = self.next_index - self.window_size
+        if self._queue and self._queue.peek_front().index < window_pop_left_index:
+            self._queue.pop()
 
 
 class SlidingWindowMin(_SlidingWindowBase[T]):
