@@ -87,6 +87,13 @@ mins = list(sliding_window_minimums(data, 3))
 maxs = list(sliding_window_maximums(data, 3))
 ```
 
+## Simple Reference Implementation
+
+The project also includes a `Simple*` reference implementation for learning,
+understanding, and hands-on implementation work such as coding interviews.
+This version keeps the monotonic queue and sliding window structure, while trimming
+heavier abstractions from the main implementation.
+
 ## Features
 
 - Streaming-friendly API for incremental updates
