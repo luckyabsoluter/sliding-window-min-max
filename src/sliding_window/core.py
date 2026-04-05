@@ -39,6 +39,9 @@ class _MonotonicQueue(Generic[T], ABC):
     def __bool__(self) -> bool:
         return bool(self._dq)
 
+    def peek_front(self) -> Optional[ValueIndex[T]]:
+        return self._dq[0] if self._dq else None
+
     def push(self, element: ValueIndex[T]) -> None:
         while self._dq and self._should_discard(self._dq[-1].value, element.value):
             self._dq.pop()
@@ -46,9 +49,6 @@ class _MonotonicQueue(Generic[T], ABC):
 
     def pop(self) -> Optional[ValueIndex[T]]:
         return self._dq.popleft() if self._dq else None
-
-    def peek_front(self) -> Optional[ValueIndex[T]]:
-        return self._dq[0] if self._dq else None
 
     def clear(self) -> None:
         self._dq.clear()
@@ -99,6 +99,14 @@ class _SlidingWindowBase(Generic[T], ABC):
             f"current={current!r})"
         )
 
+    def is_full(self) -> bool:
+        return self.next_index >= self.window_size
+
+    def current(self) -> T:
+        if not self._queue:
+            raise IndexError("window is empty")
+        return self._queue.peek_front().value
+
     def push(self, value: T) -> None:
         current_index = self.next_index
         self.next_index += 1
@@ -109,23 +117,15 @@ class _SlidingWindowBase(Generic[T], ABC):
     def extend(self, values: Iterable[T]) -> list[T]:
         return list(self.iter_values(values))
 
-    def clear(self) -> None:
-        self.next_index = 0
-        self._queue.clear()
-
-    def is_full(self) -> bool:
-        return self.next_index >= self.window_size
-
-    def current(self) -> T:
-        if not self._queue:
-            raise IndexError("window is empty")
-        return self._queue.peek_front().value
-
     def iter_values(self, values: Iterable[T]) -> Iterator[T]:
         for value in values:
             self.push(value)
             if self.is_full():
                 yield self.current()
+
+    def clear(self) -> None:
+        self.next_index = 0
+        self._queue.clear()
 
     def _evict_expired(self) -> None:
         window_pop_left_index = self.next_index - self.window_size

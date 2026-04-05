@@ -32,6 +32,9 @@ class MonotonicMinQueue:
     def __bool__(self) -> bool:
         return bool(self._dq)
 
+    def peek_front(self) -> ValueIndex | None:
+        return self._dq[0] if self._dq else None
+
     def push(self, element: ValueIndex) -> None:
         while self._dq and self._dq[-1].value >= element.value:
             self._dq.pop()
@@ -39,9 +42,6 @@ class MonotonicMinQueue:
 
     def pop(self) -> ValueIndex | None:
         return self._dq.popleft() if self._dq else None
-
-    def peek_front(self) -> ValueIndex | None:
-        return self._dq[0] if self._dq else None
 
     def clear(self) -> None:
         self._dq.clear()
@@ -59,6 +59,9 @@ class MonotonicMaxQueue:
     def __bool__(self) -> bool:
         return bool(self._dq)
 
+    def peek_front(self) -> ValueIndex | None:
+        return self._dq[0] if self._dq else None
+
     def push(self, element: ValueIndex) -> None:
         while self._dq and self._dq[-1].value <= element.value:
             self._dq.pop()
@@ -66,9 +69,6 @@ class MonotonicMaxQueue:
 
     def pop(self) -> ValueIndex | None:
         return self._dq.popleft() if self._dq else None
-
-    def peek_front(self) -> ValueIndex | None:
-        return self._dq[0] if self._dq else None
 
     def clear(self) -> None:
         self._dq.clear()
@@ -99,6 +99,14 @@ class _SlidingWindowBase:
             f"current={current!r})"
         )
 
+    def is_full(self) -> bool:
+        return self.next_index >= self.window_size
+
+    def current(self) -> int | float:
+        if not self._queue:
+            raise IndexError("window is empty")
+        return self._queue.peek_front().value
+
     def push(self, value: int | float) -> None:
         current_index = self.next_index
         self.next_index += 1
@@ -108,14 +116,6 @@ class _SlidingWindowBase:
 
     def extend(self, values: Iterable[int | float]) -> list[int | float]:
         return list(self.iter_values(values))
-
-    def is_full(self) -> bool:
-        return self.next_index >= self.window_size
-
-    def current(self) -> int | float:
-        if not self._queue:
-            raise IndexError("window is empty")
-        return self._queue.peek_front().value
 
     def iter_values(self, values: Iterable[int | float]) -> Iterator[int | float]:
         for value in values:
