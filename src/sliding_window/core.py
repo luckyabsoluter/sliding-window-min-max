@@ -107,12 +107,7 @@ class _SlidingWindowBase(Generic[T], ABC):
         self._queue.push(ValueIndex(value=value, index=current_index))
 
     def extend(self, values: Iterable[T]) -> list[T]:
-        results: list[T] = []
-        for value in values:
-            self.push(value)
-            if self.is_full():
-                results.append(self.current())
-        return results
+        return list(self.iter_values(values))
 
     def clear(self) -> None:
         self.next_index = 0
@@ -125,6 +120,12 @@ class _SlidingWindowBase(Generic[T], ABC):
         if not self._queue:
             raise IndexError("window is empty")
         return self._queue.peek_front().value
+
+    def iter_values(self, values: Iterable[T]) -> Iterator[T]:
+        for value in values:
+            self.push(value)
+            if self.is_full():
+                yield self.current()
 
     def _evict_expired(self) -> None:
         window_pop_left_index = self.next_index - self.window_size
@@ -154,11 +155,11 @@ def sliding_window_minimums(values: Iterable[T], window_size: int) -> Iterator[T
     """Yield the minimum for each full window over the input values."""
 
     window = SlidingWindowMin[T](window_size)
-    yield from window.extend(values)
+    yield from window.iter_values(values)
 
 
 def sliding_window_maximums(values: Iterable[T], window_size: int) -> Iterator[T]:
     """Yield the maximum for each full window over the input values."""
 
     window = SlidingWindowMax[T](window_size)
-    yield from window.extend(values)
+    yield from window.iter_values(values)

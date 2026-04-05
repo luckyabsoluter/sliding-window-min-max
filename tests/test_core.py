@@ -61,6 +61,21 @@ def test_batch_helpers(factory, values, window_size, expected) -> None:
     assert list(factory(values, window_size)) == expected
 
 
+def test_batch_helper_is_lazy() -> None:
+    consumed: list[int] = []
+
+    def values():
+        for value in [4, 3, 5]:
+            consumed.append(value)
+            yield value
+
+    minimums = sliding_window_minimums(values(), 2)
+
+    assert consumed == []
+    assert next(minimums) == 3
+    assert consumed == [4, 3]
+
+
 def test_extend_returns_full_window_results() -> None:
     window = SlidingWindowMin[int](3)
 
