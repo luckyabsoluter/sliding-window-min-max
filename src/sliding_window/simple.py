@@ -75,7 +75,7 @@ class MonotonicMaxQueue:
 
 
 class _SlidingWindowBase:
-    queue_type = MonotonicMinQueue
+    queue_type: type[MonotonicMinQueue] | type[MonotonicMaxQueue] = MonotonicMinQueue
 
     def __init__(self, window_size: int) -> None:
         if window_size <= 0:
