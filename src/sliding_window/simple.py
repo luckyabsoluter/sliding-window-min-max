@@ -20,58 +20,48 @@ class ValueIndex:
     index: int
 
 
-class MonotonicMinQueue:
+class _MonotonicQueue:
+    """Simple monotonic queue that stores the current best value at the front."""
+
+    def __init__(self) -> None:
+        self._dq: deque[ValueIndex] = deque()
+
+    def __len__(self) -> int:
+        return len(self._dq)
+
+    def __bool__(self) -> bool:
+        return bool(self._dq)
+
+    def peek_front(self) -> ValueIndex | None:
+        return self._dq[0] if self._dq else None
+
+    def push(self, value: int | float, index: int) -> None:
+        while self._dq and self._should_discard(self._dq[-1].value, value):
+            self._dq.pop()
+        self._dq.append(ValueIndex(value=value, index=index))
+
+    def pop(self) -> ValueIndex | None:
+        return self._dq.popleft() if self._dq else None
+
+    def clear(self) -> None:
+        self._dq.clear()
+
+    def _should_discard(self, queued_value: int | float, incoming_value: int | float) -> bool:
+        raise NotImplementedError
+
+
+class MonotonicMinQueue(_MonotonicQueue):
     """Queue that keeps the current minimum at the front."""
 
-    def __init__(self) -> None:
-        self._dq: deque[ValueIndex] = deque()
-
-    def __len__(self) -> int:
-        return len(self._dq)
-
-    def __bool__(self) -> bool:
-        return bool(self._dq)
-
-    def peek_front(self) -> ValueIndex | None:
-        return self._dq[0] if self._dq else None
-
-    def push(self, value: int | float, index: int) -> None:
-        while self._dq and self._dq[-1].value >= value:
-            self._dq.pop()
-        self._dq.append(ValueIndex(value=value, index=index))
-
-    def pop(self) -> ValueIndex | None:
-        return self._dq.popleft() if self._dq else None
-
-    def clear(self) -> None:
-        self._dq.clear()
+    def _should_discard(self, queued_value: int | float, incoming_value: int | float) -> bool:
+        return queued_value >= incoming_value
 
 
-class MonotonicMaxQueue:
+class MonotonicMaxQueue(_MonotonicQueue):
     """Queue that keeps the current maximum at the front."""
 
-    def __init__(self) -> None:
-        self._dq: deque[ValueIndex] = deque()
-
-    def __len__(self) -> int:
-        return len(self._dq)
-
-    def __bool__(self) -> bool:
-        return bool(self._dq)
-
-    def peek_front(self) -> ValueIndex | None:
-        return self._dq[0] if self._dq else None
-
-    def push(self, value: int | float, index: int) -> None:
-        while self._dq and self._dq[-1].value <= value:
-            self._dq.pop()
-        self._dq.append(ValueIndex(value=value, index=index))
-
-    def pop(self) -> ValueIndex | None:
-        return self._dq.popleft() if self._dq else None
-
-    def clear(self) -> None:
-        self._dq.clear()
+    def _should_discard(self, queued_value: int | float, incoming_value: int | float) -> bool:
+        return queued_value <= incoming_value
 
 
 class _SlidingWindowBase:
